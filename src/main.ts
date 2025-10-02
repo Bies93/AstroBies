@@ -1,8 +1,9 @@
 // Main entry point for the game
 import { Game } from './core/game';
 
-// Initialize the game when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-  const game = new Game();
+  const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
+  const hudRoot = document.getElementById('hud') as HTMLElement;
+  const game = new Game(canvas, hudRoot);
   game.start();
 });

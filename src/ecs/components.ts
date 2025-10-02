@@ -29,8 +29,20 @@ export const Size = defineComponent({
 
 // Render component
 export const Render = defineComponent({
- color: 'ui8',
+  r: 'ui8',
+  g: 'ui8',
+  b: 'ui8',
   alpha: 'f32',
+});
+
+// Lifetime component (in seconds)
+export const Lifetime = defineComponent({
+  timeLeft: 'f32',
+});
+
+// Damage component (for bullets)
+export const Damage = defineComponent({
+  amount: 'f32',
 });
 
 // Player tag component
