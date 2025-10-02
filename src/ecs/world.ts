@@ -1,6 +1,6 @@
 // ECS World
 import { createWorld, addComponent, addEntity } from 'bitecs';
-import { Position, Velocity, Health, Size, Render, Player, Enemy, Bullet, Lifetime, Damage } from './components';
+import { Position, Velocity, Health, Size, Render, Player, Enemy, Bullet, Lifetime, Damage, Seeker } from './components';
 
 function hslToRgb(h: number, s: number, l: number): [number, number, number] {
   let r: number, g: number, b: number;
@@ -89,13 +89,15 @@ export function syncPlayerState(w: World): void {
 export function createEnemy(w: World, x: number, y: number, speed = 40) {
   const e = addEntity(w);
   addComponent(w, Position, e); Position.x[e] = x; Position.y[e] = y; Position.z[e] = 0;
-  addComponent(w, Velocity, e); Velocity.vx[e] = -speed; Velocity.vy[e] = 0; Velocity.vz[e] = 0;
+  // Velocity is driven by AI; initialize to 0
+  addComponent(w, Velocity, e); Velocity.vx[e] = 0; Velocity.vy[e] = 0; Velocity.vz[e] = 0;
   addComponent(w, Size, e); Size.width[e] = 16; Size.height[e] = 16;
   addComponent(w, Health, e); Health.current[e] = 10; Health.max[e] = 10;
   const hue = 300 + Math.random() * 60;
   const [r, g, b] = hslToRgb(hue / 360, 1, 0.5);
   addComponent(w, Render, e); setColor(e, r, g, b, 1);
   addComponent(w, Enemy, e);
+  addComponent(w, Seeker, e); Seeker.speed[e] = speed;
   return e;
 }
 

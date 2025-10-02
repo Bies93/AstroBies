@@ -53,3 +53,8 @@ export const Enemy = defineComponent();
 
 // Bullet tag component
 export const Bullet = defineComponent();
+
+// Simple AI seeker component: store desired move speed
+export const Seeker = defineComponent({
+  speed: 'f32',
+});

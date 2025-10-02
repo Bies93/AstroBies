@@ -8,6 +8,7 @@ import {
   damageAndDespawnSystem,
   progressionSystem,
   playerControlSystem,
+  enemyAISystem,
 } from '../ecs/systems';
 import { Renderer2D } from '../render/renderer2d';
 import { HUD } from '../ui/hud';
@@ -81,11 +82,13 @@ export class Game {
       getState(this.world).time += step;
       const isShooting = this.input.isPointerDown || this.input.keys.has('Space');
       playerControlSystem(this.world, this.input);
+      // Update AI before movement so velocity is current
+      enemyAISystem(this.world);
       movementSystem(this.world, step);
       const width = this.canvas.width / this.renderer.dpr;
       const height = this.canvas.height / this.renderer.dpr;
       spawnSystem(this.world, step, width, height);
-      shootingSystem(this.world, step, isShooting, this.particles, this.shake);
+      shootingSystem(this.world, step, isShooting, this.particles, this.shake, this.input.pointer);
       lifetimeSystem(this.world, step);
       collisionSystem(this.world, this.particles, this.shake);
       damageAndDespawnSystem(this.world, this.particles, this.shake);

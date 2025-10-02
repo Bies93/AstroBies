@@ -1,7 +1,7 @@
 // ECS Systems
 import { defineQuery, removeEntity } from 'bitecs';
 import { World, createEnemy, createBullet } from './world';
-import { Position, Velocity, Size, Health, Enemy, Player, Bullet, Lifetime, Damage, Render } from './components';
+import { Position, Velocity, Size, Health, Enemy, Player, Bullet, Lifetime, Damage, Render, Seeker } from './components';
 import { CONFIG } from '../config';
 import { ParticleSystem } from '../systems/particles';
 import { ScreenShake } from '../render/screenShake';
@@ -38,8 +38,30 @@ export function spawnSystem(world: World, dt: number, width: number, height: num
   const interval = Math.max(0.3, 1.2 - state.wave * 0.05);
   if (spawnTimer >= interval) {
     spawnTimer = 0;
-    const y = Math.random() * (height - 20) + 10;
-    createEnemy(world, width + 10, y, 40 + Math.random() * 40);
+    const margin = 16;
+    const side = Math.floor(Math.random() * 4); // 0:top,1:right,2:bottom,3:left
+    let x = 0, y = 0;
+    switch (side) {
+      case 0: // top
+        x = Math.random() * width;
+        y = -margin;
+        break;
+      case 1: // right
+        x = width + margin;
+        y = Math.random() * height;
+        break;
+      case 2: // bottom
+        x = Math.random() * width;
+        y = height + margin;
+        break;
+      default: // left
+        x = -margin;
+        y = Math.random() * height;
+        break;
+    }
+    const base = 40;
+    const speed = base + Math.random() * 40 + state.wave * 2;
+    createEnemy(world, x, y, speed);
   }
 }
 
@@ -52,16 +74,50 @@ export function shootingSystem(
   isShooting: boolean,
   particles: ParticleSystem,
   shake: ScreenShake,
+  pointer?: { x: number; y: number },
 ): void {
   shootCooldown -= dt;
   if (!isShooting || shootCooldown > 0) return;
   const players = playerQ(world);
   if (players.length === 0) return;
   const p = players[0];
-  const bullet = createBullet(world, Position.x[p] + 16, Position.y[p], 320, 0, 5);
+  const px = Position.x[p];
+  const py = Position.y[p];
+  let dirx = 1, diry = 0;
+  if (pointer) {
+    const dx = pointer.x - px;
+    const dy = pointer.y - py;
+    const len = Math.hypot(dx, dy) || 1;
+    dirx = dx / len;
+    diry = dy / len;
+  }
+  const bulletSpeed = 320;
+  const bx = px + dirx * 16;
+  const by = py + diry * 16;
+  const bullet = createBullet(world, bx, by, dirx * bulletSpeed, diry * bulletSpeed, 5);
   particles.muzzleFlash(Position.x[bullet], Position.y[bullet]);
   shake.bump(2.5);
   shootCooldown = 0.15;
+}
+
+// Enemy AI: steer velocity towards player each tick
+const enemyAIQ = defineQuery([Enemy, Position, Velocity, Seeker]);
+export function enemyAISystem(world: World): void {
+  const enemies = enemyAIQ(world);
+  const players = playerQ(world);
+  if (players.length === 0) return;
+  const p = players[0];
+  const px = Position.x[p];
+  const py = Position.y[p];
+  for (let i = 0; i < enemies.length; i++) {
+    const e = enemies[i];
+    const dx = px - Position.x[e];
+    const dy = py - Position.y[e];
+    const len = Math.hypot(dx, dy) || 1;
+    const sp = Seeker.speed[e] || 40;
+    Velocity.vx[e] = (dx / len) * sp;
+    Velocity.vy[e] = (dy / len) * sp;
+  }
 }
 
 // Player control: set velocity from input state

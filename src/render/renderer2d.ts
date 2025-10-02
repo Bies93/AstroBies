@@ -17,12 +17,19 @@ function rgba(r: number, g: number, b: number, a = 1): string {
 }
 
 export function resizeCanvas(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): number {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // Use integer DPR to avoid subpixel blurring and disable smoothing for crisp pixels
+  const rawDpr = Math.min(window.devicePixelRatio || 1, 4);
+  const dpr = Math.max(1, Math.floor(rawDpr));
   const { clientWidth, clientHeight } = canvas;
   const width = clientWidth || canvas.getBoundingClientRect().width;
   const height = clientHeight || canvas.getBoundingClientRect().height;
   canvas.width = Math.floor(width * dpr);
   canvas.height = Math.floor(height * dpr);
+  // Ensure no image smoothing on any browser
+  (ctx as any).imageSmoothingEnabled = false;
+  (ctx as any).mozImageSmoothingEnabled = false;
+  (ctx as any).webkitImageSmoothingEnabled = false;
+  (ctx as any).msImageSmoothingEnabled = false;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return dpr;
 }
