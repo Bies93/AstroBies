@@ -1,10 +1,22 @@
-import { initializeWorld, createPlayer, getState } from '../ecs/world';
-import { movementSystem, lifetimeSystem, spawnSystem, shootingSystem, collisionSystem, damageAndDespawnSystem, progressionSystem, playerControlSystem } from '../ecs/systems';
+import { initializeWorld, createPlayer, getState, syncPlayerState } from '../ecs/world';
+import {
+  movementSystem,
+  lifetimeSystem,
+  spawnSystem,
+  shootingSystem,
+  collisionSystem,
+  damageAndDespawnSystem,
+  progressionSystem,
+  playerControlSystem,
+} from '../ecs/systems';
 import { Renderer2D } from '../render/renderer2d';
 import { HUD } from '../ui/hud';
 import { Input } from './input';
 import { CONFIG } from '../config';
 import { Audio } from './audio';
+import { ParticleSystem } from '../systems/particles';
+import { Starfield } from '../systems/background';
+import { ScreenShake } from '../render/screenShake';
 
 // Game class - main game controller
 export class Game {
@@ -13,6 +25,9 @@ export class Game {
   private renderer: Renderer2D;
   private hud: HUD;
   private input: Input;
+  private particles = new ParticleSystem();
+  private background = new Starfield();
+  private shake = new ScreenShake();
   private world = initializeWorld();
   private running = false;
   private accumulator = 0;
@@ -31,17 +46,17 @@ export class Game {
     window.addEventListener('resize', () => this.handleResize());
 
     // Create player
-    createPlayer(this.world, this.canvas.width / this.renderer.dpr / 4, this.canvas.height / this.renderer.dpr / 2);
+    const width = this.canvas.width / this.renderer.dpr;
+    const height = this.canvas.height / this.renderer.dpr;
+    createPlayer(this.world, width * 0.25, height * 0.5);
+    syncPlayerState(this.world);
   }
 
   private handleResize() {
-    const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
-    const w = this.canvas.clientWidth || this.canvas.parentElement!.clientWidth;
-    const h = this.canvas.clientHeight || this.canvas.parentElement!.clientHeight;
-    this.canvas.width = Math.floor(w * dpr);
-    this.canvas.height = Math.floor(h * dpr);
-    this.renderer.setDPR(dpr);
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.renderer.resize();
+    const width = this.canvas.width / this.renderer.dpr;
+    const height = this.canvas.height / this.renderer.dpr;
+    this.background.resize(width, height);
   }
 
   public start(): void {
@@ -55,7 +70,8 @@ export class Game {
 
   private loop(ts: number): void {
     if (!this.running) return;
-    const dtMs = ts - this.lastTs; this.lastTs = ts;
+    const dtMs = ts - this.lastTs;
+    this.lastTs = ts;
     let dt = Math.min(0.25, dtMs / 1000);
     this.accumulator += dt;
     const step = CONFIG.fixedDelta;
@@ -66,20 +82,26 @@ export class Game {
       const isShooting = this.input.isPointerDown || this.input.keys.has('Space');
       playerControlSystem(this.world, this.input);
       movementSystem(this.world, step);
-      spawnSystem(this.world, step, this.canvas.width / this.renderer.dpr, this.canvas.height / this.renderer.dpr);
-      shootingSystem(this.world, step, isShooting);
+      const width = this.canvas.width / this.renderer.dpr;
+      const height = this.canvas.height / this.renderer.dpr;
+      spawnSystem(this.world, step, width, height);
+      shootingSystem(this.world, step, isShooting, this.particles, this.shake);
       lifetimeSystem(this.world, step);
-      collisionSystem(this.world);
-      damageAndDespawnSystem(this.world);
+      collisionSystem(this.world, this.particles, this.shake);
+      damageAndDespawnSystem(this.world, this.particles, this.shake);
       progressionSystem(this.world);
       this.accumulator -= step;
     }
 
-    // Render
-    this.renderer.clear();
-    this.renderer.renderWorld(this.world);
+    const frameDt = dtMs / 1000;
+    this.background.update(frameDt);
+    this.particles.syncTrails(this.world);
+    this.particles.update(frameDt);
+
+    this.renderer.render(this.world, this.background, this.particles, this.shake);
 
     // HUD
+    syncPlayerState(this.world);
     this.hud.update(getState(this.world));
 
     requestAnimationFrame((now) => this.loop(now));
