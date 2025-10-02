@@ -1,5 +1,5 @@
 // ECS World
-import { createWorld, createEntity, addComponent, Types } from 'bitecs';
+import { createWorld, addComponent, addEntity } from 'bitecs';
 import { Position, Velocity, Health, Size, Render, Player, Enemy, Bullet, Lifetime, Damage } from './components';
 
 export interface GameState {
@@ -30,7 +30,7 @@ export function setColor(e: number, r: number, g: number, b: number, a = 1) {
 }
 
 export function createPlayer(w: World, x: number, y: number) {
-  const e = createEntity(w);
+  const e = addEntity(w);
   addComponent(w, Position, e); Position.x[e] = x; Position.y[e] = y; Position.z[e] = 0;
   addComponent(w, Velocity, e); Velocity.vx[e] = 0; Velocity.vy[e] = 0; Velocity.vz[e] = 0;
   addComponent(w, Size, e); Size.width[e] = 20; Size.height[e] = 20;
@@ -45,7 +45,7 @@ export function getState(w: World): GameState {
 }
 
 export function createEnemy(w: World, x: number, y: number, speed = 40) {
-  const e = createEntity(w);
+  const e = addEntity(w);
   addComponent(w, Position, e); Position.x[e] = x; Position.y[e] = y; Position.z[e] = 0;
   addComponent(w, Velocity, e); Velocity.vx[e] = -speed; Velocity.vy[e] = 0; Velocity.vz[e] = 0;
   addComponent(w, Size, e); Size.width[e] = 16; Size.height[e] = 16;
@@ -56,11 +56,11 @@ export function createEnemy(w: World, x: number, y: number, speed = 40) {
 }
 
 export function createBullet(w: World, x: number, y: number, vx: number, vy: number, dmg = 5) {
-  const e = createEntity(w);
+  const e = addEntity(w);
   addComponent(w, Position, e); Position.x[e] = x; Position.y[e] = y; Position.z[e] = 0;
   addComponent(w, Velocity, e); Velocity.vx[e] = vx; Velocity.vy[e] = vy; Velocity.vz[e] = 0;
   addComponent(w, Size, e); Size.width[e] = 4; Size.height[e] = 4;
-  addComponent(w, Render, e); setColor(e, 255, 255, 0, 1);
+  addComponent(w, Render, e); setColor(e, 25, 255, 0, 1);
   addComponent(w, Bullet, e);
   addComponent(w, Lifetime, e); Lifetime.timeLeft[e] = 2.0;
   addComponent(w, Damage, e); Damage.amount[e] = dmg;

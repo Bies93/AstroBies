@@ -1,5 +1,5 @@
 // ECS Systems
-import { addComponent, defineQuery, enterQuery, exitQuery, hasComponent, removeEntity } from 'bitecs';
+import { defineQuery, removeEntity } from 'bitecs';
 import { World, createEnemy, createBullet } from './world';
 import { Position, Velocity, Size, Health, Enemy, Player, Bullet, Lifetime, Damage } from './components';
 import { CONFIG } from '../config';
