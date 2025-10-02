@@ -1,8 +1,10 @@
 // ECS Systems
 import { defineQuery, removeEntity } from 'bitecs';
 import { World, createEnemy, createBullet } from './world';
-import { Position, Velocity, Size, Health, Enemy, Player, Bullet, Lifetime, Damage } from './components';
+import { Position, Velocity, Size, Health, Enemy, Player, Bullet, Lifetime, Damage, Render } from './components';
 import { CONFIG } from '../config';
+import { ParticleSystem } from '../systems/particles';
+import { ScreenShake } from '../render/screenShake';
 
 // Movement: p += v * dt
 const moveQ = defineQuery([Position, Velocity]);
@@ -44,13 +46,21 @@ export function spawnSystem(world: World, dt: number, width: number, height: num
 // Shooting: create bullets from player if control set by outer loop
 const playerQ = defineQuery([Player, Position]);
 let shootCooldown = 0;
-export function shootingSystem(world: World, dt: number, isShooting: boolean): void {
+export function shootingSystem(
+  world: World,
+  dt: number,
+  isShooting: boolean,
+  particles: ParticleSystem,
+  shake: ScreenShake,
+): void {
   shootCooldown -= dt;
   if (!isShooting || shootCooldown > 0) return;
   const players = playerQ(world);
   if (players.length === 0) return;
   const p = players[0];
-  createBullet(world, Position.x[p] + 16, Position.y[p], 300, 0, 5);
+  const bullet = createBullet(world, Position.x[p] + 16, Position.y[p], 320, 0, 5);
+  particles.muzzleFlash(Position.x[bullet], Position.y[bullet]);
+  shake.bump(2.5);
   shootCooldown = 0.15;
 }
 
@@ -76,11 +86,13 @@ function aabb(ax: number, ay: number, aw: number, ah: number, bx: number, by: nu
 }
 
 // Collision: Bullet–Enemy and Player–Enemy
-const enemyQ = defineQuery([Enemy, Position, Size, Health]);
-const bulletQ = defineQuery([Bullet, Position, Size, Damage]);
-export function collisionSystem(world: World): void {
+const enemyQ = defineQuery([Enemy, Position, Size, Health, Render]);
+const bulletQ = defineQuery([Bullet, Position, Size, Damage, Render]);
+const playerHitQ = defineQuery([Player, Position, Size, Health]);
+export function collisionSystem(world: World, particles: ParticleSystem, shake: ScreenShake): void {
   const enemies = enemyQ(world);
   const bullets = bulletQ(world);
+  const players = playerHitQ(world);
 
   // Bullet–Enemy
   for (let bi = 0; bi < bullets.length; bi++) {
@@ -94,19 +106,45 @@ export function collisionSystem(world: World): void {
         )
       ) {
         Health.current[e] -= Damage.amount[b];
+        if (Health.current[e] < 0) Health.current[e] = 0;
+        const color = `rgba(${Render.r[e]}, ${Render.g[e]}, ${Render.b[e]}, 1)`;
+        particles.hitBurst(Position.x[e], Position.y[e], color);
+        shake.bump(5);
         removeEntity(world, b);
         break;
       }
     }
   }
+
+  if (players.length === 0) return;
+
+  const player = players[0];
+  for (let ei = 0; ei < enemies.length; ei++) {
+    const e = enemies[ei];
+    if (
+      aabb(
+        Position.x[player], Position.y[player], Size.width[player], Size.height[player],
+        Position.x[e], Position.y[e], Size.width[e], Size.height[e]
+      )
+    ) {
+      Health.current[player] -= 15;
+      if (Health.current[player] < 0) Health.current[player] = 0;
+      particles.hitBurst(Position.x[player], Position.y[player], 'rgba(0,255,255,0.9)');
+      shake.bump(9);
+      removeEntity(world, e);
+    }
+  }
 }
 
 // Damage + despawn
-export function damageAndDespawnSystem(world: World): void {
+export function damageAndDespawnSystem(world: World, particles: ParticleSystem, shake: ScreenShake): void {
   const enemies = enemyQ(world);
   for (let i = 0; i < enemies.length; i++) {
     const e = enemies[i];
     if (Health.current[e] <= 0) {
+      const color = `rgba(${Render.r[e]}, ${Render.g[e]}, ${Render.b[e]}, 1)`;
+      particles.explosion(Position.x[e], Position.y[e], color);
+      shake.bump(12);
       removeEntity(world, e);
       const state = (world as any).state; state.score += 10;
     }
