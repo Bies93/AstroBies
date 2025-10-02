@@ -1,5 +1,5 @@
 import { defineQuery } from 'bitecs';
-import { Bullet, Enemy, Health, Player, Position, Render, Size, Velocity } from '../ecs/components';
+import { Bullet, Enemy, Health, Player, Position, Render, Size, Velocity, Rotation } from '../ecs/components';
 import type { World } from '../ecs/world';
 import { drawPlayer } from './drawPlayer';
 import { drawEnemy } from './drawEnemy';
@@ -72,7 +72,7 @@ export class Renderer2D {
       const x = Position.x[p];
       const y = Position.y[p];
       const r = Math.max(Size.width[p], Size.height[p]) * 0.65;
-      drawPlayer(this.ctx, x, y, r, Velocity.vx[p], Velocity.vy[p]);
+      drawPlayer(this.ctx, x, y, r, Rotation.angle[p]);
     }
 
     // Draw bullets last so they bloom on top

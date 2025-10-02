@@ -3,8 +3,7 @@ export function drawPlayer(
   x: number,
   y: number,
   r: number,
-  velocityX: number,
-  velocityY: number,
+  angle: number,
 ): void {
   ctx.save();
   ctx.shadowBlur = 35;
@@ -23,9 +22,8 @@ export function drawPlayer(
   ctx.shadowBlur = 0;
 
   // Draw heading indicator
-  const len = Math.hypot(velocityX, velocityY);
-  const dirX = len > 0.01 ? velocityX / len : 1;
-  const dirY = len > 0.01 ? velocityY / len : 0;
+  const dirX = Math.cos(angle || 0);
+  const dirY = Math.sin(angle || 0);
 
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
   ctx.lineWidth = 3;

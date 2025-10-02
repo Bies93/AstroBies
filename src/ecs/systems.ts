@@ -1,7 +1,7 @@
 // ECS Systems
 import { defineQuery, removeEntity } from 'bitecs';
 import { World, createEnemy, createBullet } from './world';
-import { Position, Velocity, Size, Health, Enemy, Player, Bullet, Lifetime, Damage, Render, Seeker } from './components';
+import { Position, Velocity, Size, Health, Enemy, Player, Bullet, Lifetime, Damage, Render, Seeker, Rotation } from './components';
 import { CONFIG } from '../config';
 import { ParticleSystem } from '../systems/particles';
 import { ScreenShake } from '../render/screenShake';
@@ -121,7 +121,7 @@ export function enemyAISystem(world: World): void {
 }
 
 // Player control: set velocity from input state
-export function playerControlSystem(world: World, input: { keys: Set<string> }, speed = CONFIG.playerSpeed) {
+export function playerControlSystem(world: World, input: { keys: Set<string>; pointer?: { x: number; y: number } }, speed = CONFIG.playerSpeed) {
   const players = playerQ(world);
   for (let i = 0; i < players.length; i++) {
     const p = players[i];
@@ -133,6 +133,12 @@ export function playerControlSystem(world: World, input: { keys: Set<string> }, 
     const len = Math.hypot(vx, vy) || 1;
     Velocity.vx[p] = (vx / len) * speed;
     Velocity.vy[p] = (vy / len) * speed;
+    // Update rotation to face pointer if available
+    if (input.pointer) {
+      const dx = input.pointer.x - Position.x[p];
+      const dy = input.pointer.y - Position.y[p];
+      Rotation.angle[p] = Math.atan2(dy, dx);
+    }
   }
 }
 

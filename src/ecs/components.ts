@@ -58,3 +58,8 @@ export const Bullet = defineComponent();
 export const Seeker = defineComponent({
   speed: 'f32',
 });
+
+// Rotation (radians), used for rendering/aiming
+export const Rotation = defineComponent({
+  angle: 'f32',
+});
