@@ -62,7 +62,7 @@ Thumbs.db
 *.jar
 *.sublime-project
 *.sublime-workspace
-
+setup_env.bat
 # TypeScript
 *.tsbuildinfo
 *.tgz
