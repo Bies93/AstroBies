@@ -1,0 +1,133 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+}
+
+#gameContainer {
+    position: relative;
+}
+
+canvas {
+    border: 3px solid #00ffff;
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.7), inset 0 0 30px rgba(0, 255, 255, 0.1);
+    display: block;
+    background: #0a0a0f;
+    border-radius: 10px;
+}
+
+#ui {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: #00ffff;
+    font-size: 20px;
+    text-shadow: 0 0 15px rgba(0, 255, 255, 1);
+    pointer-events: none;
+    font-weight: bold;
+}
+
+#ui > div {
+    margin-bottom: 12px;
+    padding: 8px 15px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 5px;
+    border: 2px solid rgba(0, 255, 255, 0.3);
+    display: inline-block;
+}
+
+.healthBar {
+    width: 200px;
+    height: 25px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid #00ffff;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.healthFill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0066, #ff6600);
+    transition: width 0.3s ease;
+    box-shadow: 0 0 20px rgba(255, 0, 102, 0.8);
+}
+
+.healthText {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-shadow: 0 0 5px black;
+}
+
+#comboDisplay {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: #ffff00;
+    font-size: 32px;
+    text-shadow: 0 0 20px rgba(255, 255, 0, 1);
+    pointer-events: none;
+    font-weight: bold;
+    display: none;
+}
+
+#gameOver {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #ff0066;
+    font-size: 64px;
+    text-shadow: 0 0 30px rgba(255, 0, 102, 1);
+    display: none;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.05); }
+}
+
+#gameOver button {
+    margin-top: 30px;
+    padding: 20px 40px;
+    font-size: 24px;
+    background: linear-gradient(135deg, #ff0066, #00ffff);
+    border: 3px solid white;
+    color: white;
+    cursor: pointer;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 0 30px rgba(255, 0, 102, 0.8);
+    transition: all 0.3s;
+    border-radius: 10px;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+}
+
+#gameOver button:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.8);
+}
+
+.stats {
+    font-size: 28px;
+    margin-top: 20px;
+    color: #00ffff;
+}
