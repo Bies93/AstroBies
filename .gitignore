@@ -63,10 +63,6 @@ Thumbs.db
 *.sublime-project
 *.sublime-workspace
 
-# Compiled JavaScript
-*.js
-!src/**/*.js
-
 # TypeScript
 *.tsbuildinfo
 *.tgz
